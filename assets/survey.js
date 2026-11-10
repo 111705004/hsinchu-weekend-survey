@@ -84,7 +84,7 @@ const PAGES = [
       h('div', { class: 'cast', 'aria-label': '8 種新竹人' }, Object.keys(TYPES).map((c) => h('span', { html: ART.mascot(c), title: TYPES[c].name }))),
       h('p', { class: 'lead' }, '週末是「九降風避難者」還是「巨城無限迴圈」？9 題情境測驗，測出你的新竹人類型，領一張專屬角色卡。'),
       giftBox(`測完抽${LOT.prize}`, `留 Email 就能抽，共 ${LOT.winners} 位・${prizeLine()}`),
-      h('div', { class: 'acts' }, h('button', { class: 'btn red', type: 'button', onclick: next }, '開始測驗')),
+      h('div', { class: 'acts' }, h('button', { class: 'btn red', type: 'button', onclick() { S.started = Date.now(); next(); } }, '開始測驗')),
       h('p', { class: 'note' }, '約 4 分鐘・匿名・不用登入'),
     ];
   }, valid: () => true },
@@ -232,7 +232,8 @@ async function submit() {
     decide: S.decide, duration: S.duration, open: S.open,
     pocket: S.pocket.slice(0, S.pocketN).map((n) => n.trim()).filter(Boolean).map((name) => ({ name })), pocketConsent: true,
     lottery: email && S.lotteryAgree ? { email, draw: true, early: true } : null, website: S.website,
-    secs: Math.round((Date.now() - S.started) / 1000),
+    // 從按「開始測驗」算起；超過 2 小時（中途離開又回來）記成 7200，後台才不會變空白
+    secs: Math.min(7200, Math.max(0, Math.round((Date.now() - (S.started || Date.now())) / 1000))),
   };
   let res = null, offline = false;
   try { res = await post(body); }
