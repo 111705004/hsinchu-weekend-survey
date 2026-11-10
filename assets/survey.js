@@ -335,7 +335,7 @@ async function saveImage(d, t, bars, no) {
     y += 76;
   });
   y += 30;
-  [['天生技能', t.skill], ['致命弱點', t.weak], ['週末處方', t.tip]].forEach(([k, v]) => {
+  [['天生技能', t.skill], ['致命弱點', t.weak], ['最佳拍檔', TYPES[t.mate].name], ['週末處方', t.tip]].forEach(([k, v]) => {
     x.fillStyle = '#4c5d54'; x.font = `500 30px ${sans}`; x.fillText(k, 120, y);
     x.fillStyle = '#1d2b25'; x.font = `500 34px ${sans}`; y = wrap(x, v, 290, y, W - 410, 48) + 70;
   });
