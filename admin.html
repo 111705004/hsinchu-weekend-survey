@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>問卷數據後台</title>
+<title>測驗數據後台</title>
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="adm">
 <header class="sv-top">
-  <span class="brand"><i>竹</i>問卷數據</span>
+  <span class="brand"><i>竹</i>測驗數據</span>
   <span class="sv-count" id="n"></span>
 </header>
 <main class="ad-main">
   <section id="login" class="ad-login">
-    <h1>新竹人週末調查・後台</h1>
-    <p class="lead">輸入團隊的管理密碼（Apps Script 指令碼屬性裡的 <code>ADMIN_KEY</code>）。密碼只存在這個分頁，關掉就清掉。</p>
+    <h1>新竹人心理測驗・後台</h1>
+    <p class="lead">輸入團隊的管理密碼（Apps Script 指令碼屬性裡的 <code>ADMIN_KEY</code>）。密碼錯 10 次會鎖 15 分鐘。密碼只存在這個分頁，關掉就清掉。</p>
     <form id="loginForm" class="acts">
       <label class="f grow">管理密碼<input type="password" id="key" autocomplete="current-password" required></label>
       <button class="btn" type="submit">載入數據</button>
@@ -30,7 +30,6 @@
       <label class="f">身分<select id="fRole"></select></label>
       <label class="f">類型<select id="fType"></select></label>
       <label class="f">年齡<select id="fAge"></select></label>
-      <label class="f">來源<select id="fSrc"></select></label>
       <div class="acts ex">
         <button class="btn ghost" type="button" id="exCsv">匯出回覆 CSV</button>
         <button class="btn ghost" type="button" id="exPocket">匯出口袋名單 CSV</button>

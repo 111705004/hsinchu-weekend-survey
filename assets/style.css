@@ -150,3 +150,30 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 .winners{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .winners li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 12px;background:var(--paper);border-radius:6px;font-variant-numeric:tabular-nums}
 .winners li b{overflow-wrap:anywhere}
+
+/* ── 插圖與禮物動畫 ── */
+.art{position:relative;display:grid;place-items:center;padding-block:4px}
+.art svg{width:min(220px,62vw);height:auto;display:block}
+.art .stamp{position:absolute;right:0;top:0;width:64px;height:64px;font-size:36px}
+.cast{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:520px}
+.cast svg{width:100%;height:auto;display:block;animation:bob 2.6s ease-in-out infinite}
+.cast span:nth-child(2n) svg{animation-delay:-1.3s}.cast span:nth-child(3n) svg{animation-delay:-.6s}
+@media (max-width:480px){.cast{grid-template-columns:repeat(4,1fr);max-width:280px}}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.giftbox{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:12px;background:linear-gradient(135deg,#fbefe6,#f8f9f5);border:1.5px solid #e9c3b5}
+.giftbox svg{flex:none;width:96px;height:auto;overflow:visible}
+.giftbox b{display:block;font:900 20px var(--serif);color:var(--seal);line-height:1.35}
+.giftbox span{display:block;font-size:13.5px;color:var(--ink2)}
+.giftbox.big{flex-direction:column;text-align:center;padding:22px}
+.giftbox.big svg{width:150px}
+.gift .box{transform-origin:80px 140px;animation:wiggle 2.8s ease-in-out infinite}
+.gift .lid{transform-origin:80px 80px;animation:hop 2.8s ease-in-out infinite}
+.gift .qm{animation:qm 2.8s ease-in-out infinite}
+.gift .spark{transform-box:fill-box;transform-origin:center;animation:twinkle 1.6s ease-in-out infinite}
+.gift .s2{animation-delay:-.5s}.gift .s3{animation-delay:-1s}
+@keyframes wiggle{0%,55%,100%{transform:rotate(0)}62%{transform:rotate(-6deg)}70%{transform:rotate(5deg)}78%{transform:rotate(-3deg)}86%{transform:rotate(0)}}
+@keyframes hop{0%,55%,100%{transform:translateY(0) rotate(0)}66%{transform:translateY(-16px) rotate(-5deg)}76%{transform:translateY(-4px) rotate(3deg)}86%{transform:translateY(0)}}
+@keyframes qm{0%,55%,100%{opacity:0;transform:translateY(8px)}68%,84%{opacity:1;transform:translateY(-6px)}}
+@keyframes twinkle{50%{transform:scale(.4);opacity:.3}}
+@media (prefers-reduced-motion:reduce){.cast svg,.gift *{animation:none!important}.gift .qm{opacity:1}}
+.addmore{align-self:flex-start}

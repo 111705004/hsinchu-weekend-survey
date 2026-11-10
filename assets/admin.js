@@ -1,4 +1,4 @@
-// 新竹人週末調查：後台。讀全部回覆、篩選、畫圖、匯出、抽獎。題目定義在 questions.js。
+// 新竹人心理測驗：後台。讀全部回覆、篩選、畫圖、匯出、抽獎。題目定義在 questions.js。
 (() => {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -23,7 +23,7 @@ const typeName = (c) => (TYPES[c] ? `${TYPES[c].name}（${c}）` : c);
 async function api(body) {
   const r = await fetch(URL_, { method: 'POST', body: JSON.stringify({ ...body, key: KEY }) });
   const j = await r.json();
-  if (!j.ok) throw new Error(j.error === 'unauthorized' ? '密碼不對，或 Apps Script 還沒設定 ADMIN_KEY。' : `讀取失敗（${j.error}）`);
+  if (!j.ok) throw new Error({ unauthorized: '密碼不對，或 Apps Script 還沒設定 ADMIN_KEY（至少 12 個字）。', locked: '密碼錯太多次，已暫時鎖住，15 分鐘後再試。' }[j.error] || `讀取失敗（${j.error}）`);
   return j;
 }
 
@@ -39,7 +39,7 @@ $('loginForm').addEventListener('submit', async (e) => {
   } catch (err) { $('loginErr').textContent = err.message || '連不到試算表。'; }
 });
 $('localBtn').addEventListener('click', () => {
-  let rows = []; try { rows = JSON.parse(localStorage.getItem('hs-survey-pending')) || []; } catch {}
+  let rows = []; try { rows = JSON.parse(localStorage.getItem('hs-quiz-pending')) || []; } catch {}
   LOCAL = true; start(rows, '這台裝置暫存');
 });
 try { const k = sessionStorage.getItem('hs-admin-key'); if (k && URL_) { $('key').value = k; $('loginForm').requestSubmit(); } } catch {}
@@ -48,19 +48,16 @@ function start(rows, label) {
   ALL = rows; $('login').hidden = true; $('dash').hidden = false;
   $('n').textContent = `${label}・共 ${rows.length} 份`;
   const opts = (sel, vals, all) => { sel.textContent = ''; sel.append(h('option', { value: '' }, all)); vals.forEach(([v, t]) => sel.append(h('option', { value: v }, t))); };
-  const uniq = (f) => [...new Set(rows.map(f).filter(Boolean))].sort();
   opts($('fRole'), PROFILE[0].opts.map((o) => [o, o]), '全部身分');
   opts($('fType'), Object.keys(TYPES).map((c) => [c, typeName(c)]), '全部類型');
   opts($('fAge'), PROFILE[1].opts.map((o) => [o, o]), '全部年齡');
-  opts($('fSrc'), uniq((r) => r.src || '（直接開啟）').map((s) => [s, s]), '全部來源');
-  ['fRole', 'fType', 'fAge', 'fSrc'].forEach((id) => $(id).addEventListener('change', render));
+  ['fRole', 'fType', 'fAge'].forEach((id) => $(id).addEventListener('change', render));
   render();
   lottery();
 }
 function filtered() {
-  const role = $('fRole').value, type = $('fType').value, age = $('fAge').value, src = $('fSrc').value;
-  return ALL.filter((r) => (!role || r.profile?.role === role) && (!type || r.type === type) && (!age || r.profile?.age === age)
-    && (!src || (r.src || '（直接開啟）') === src));
+  const role = $('fRole').value, type = $('fType').value, age = $('fAge').value;
+  return ALL.filter((r) => (!role || r.profile?.role === role) && (!type || r.type === type) && (!age || r.profile?.age === age));
 }
 
 // ── 圖表元件 ──
@@ -113,7 +110,7 @@ const lineGroup = (r) => (r.likert?.l1 >= 4 ? '自認兩點一線（l1 ≥ 4）'
 function render() {
   const rows = filtered(), n = rows.length, out = $('out');
   out.textContent = '';
-  if (!n) { out.append(h('p', { class: 'empty' }, ALL.length ? '這個篩選條件下沒有回覆。' : '還沒有回覆。把問卷連結發出去吧。')); return; }
+  if (!n) { out.append(h('p', { class: 'empty' }, ALL.length ? '這個篩選條件下沒有回覆。' : '還沒有回覆。把測驗連結發出去吧。')); return; }
   const agree = (id) => rows.filter((r) => r.likert?.[id] >= 4).length;
   const zero = rows.filter((r) => r.newPlaces === '0 次').length;
   const homeish = rows.filter((r) => (r.weekend || []).some((w) => ['在家耍廢、補眠', '追劇、打電動、滑手機'].includes(w))).length;
@@ -192,30 +189,21 @@ function qualSection(rows) {
 
 // ── 口袋名單 ──
 const norm = (s) => String(s || '').replace(/\s+/g, '').replace(/[（(].*?[）)]/g, '').toLowerCase();
-function groupPockets(rows) {
+function pocketSection(rows) {
   const m = new Map();
   rows.forEach((r) => (r.pocket || []).forEach((p) => {
     const k = norm(p.name); if (!k) return;
-    const g = m.get(k) || { name: p.name, n: 0, cats: {}, areas: {}, why: [], consent: 0 };
-    g.n++; if (r.pocketConsent) g.consent++;
-    if (p.cat) g.cats[p.cat] = (g.cats[p.cat] || 0) + 1;
-    if (p.area) g.areas[p.area] = (g.areas[p.area] || 0) + 1;
-    if (p.why) g.why.push(p.why);
+    const g = m.get(k) || { name: p.name, n: 0, types: {} };
+    g.n++; if (r.type) g.types[TYPES[r.type]?.name || r.type] = (g.types[TYPES[r.type]?.name || r.type] || 0) + 1;
     m.set(k, g);
   }));
-  return [...m.values()].sort((a, b) => b.n - a.n);
-}
-const topKey = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map((e) => e[0]).join('、');
-function pocketSection(rows) {
-  const g = groupPockets(rows);
-  const all = rows.flatMap((r) => r.pocket || []);
+  const g = [...m.values()].sort((a, b) => b.n - a.n);
+  const top = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map((e) => e[0]).slice(0, 3).join('、');
   const body = g.length ? h('div', { class: 'tw' }, h('table', {},
-    h('thead', {}, h('tr', {}, ['店名', '推薦數', '類型', '區域', '推薦理由', '同意公開'].map((t, i) => h('th', { class: i === 1 || i === 5 ? 'num' : '' }, t)))),
-    h('tbody', {}, g.map((x) => h('tr', {}, h('td', {}, x.name), h('td', { class: 'num' }, x.n), h('td', {}, topKey(x.cats)), h('td', {}, topKey(x.areas)),
-      h('td', {}, x.why.slice(0, 3).join(' ／ ')), h('td', { class: 'num' }, `${x.consent}/${x.n}`))))))
-    : h('p', { class: 'empty' }, '還沒有口袋名單。');
-  return sec('口袋名單', '店名相同（忽略空白與括號）會合併計數。試算表的「口袋名單」分頁有每一筆原始資料。',
-    h('div', { class: 'grid2' }, col('類型', hbar(count(all, (p) => p.cat, POCKET_CATS), all.length))), body);
+    h('thead', {}, h('tr', {}, h('th', {}, '店名'), h('th', { class: 'num' }, '推薦數'), h('th', {}, '推薦者類型'))),
+    h('tbody', {}, g.map((x) => h('tr', {}, h('td', {}, x.name), h('td', { class: 'num' }, x.n), h('td', {}, top(x.types)))))))
+    : h('p', { class: 'empty' }, '還沒有人推薦店家。');
+  return sec('口袋名單', `共 ${g.length} 間不重複店家。店名相同（忽略空白與括號）會合併計數；試算表的「口袋名單」分頁有每一筆原始資料。`, body);
 }
 
 // ── 抽獎 ──
@@ -224,7 +212,7 @@ async function lottery() {
   box.textContent = '';
   box.append(h('h2', {}, `抽獎：${LOT.prize}`));
   if (LOCAL) {
-    const pool = [...new Set(ALL.map((r) => r.lottery?.email?.toLowerCase()).filter(Boolean))];
+    const pool = [...new Set(ALL.filter((r) => r.lottery?.draw).map((r) => r.lottery.email.toLowerCase()))];
     box.append(h('p', { class: 'note' }, `本機測試模式：這台裝置有 ${pool.length} 個不重複 Email。正式抽獎要登入試算表後在這裡抽，結果會記到「中獎紀錄」分頁。`));
     return;
   }
@@ -233,7 +221,7 @@ async function lottery() {
   const panel = h('div', { class: 'lot' });
   const won = new Set(s.winners.map((w) => w.email.toLowerCase()));
   const left = Math.max(0, s.unique - won.size);
-  panel.append(h('p', {}, `抽獎名單 ${s.entries} 筆，不重複 Email `, h('b', {}, s.unique), ` 個，還沒中獎的 ${left} 個。每個 Email 中獎機率相同，不會重複中獎。`));
+  panel.append(h('p', {}, `參加抽獎的不重複 Email `, h('b', {}, s.unique), ` 個（還沒中獎 ${left} 個）；想搶先體驗的 `, h('b', {}, s.early ?? 0), ' 個。每個 Email 中獎機率相同，不會重複中獎。'));
   const msg = h('p', { class: 'note', role: 'status' });
   const n = Math.max(1, Number(LOT.winners) || 1);
   let armed = false;
@@ -256,20 +244,21 @@ function download(name, text, type) {
   const a = h('a', { href: URL.createObjectURL(new Blob([text], { type })), download: name });
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-const csvCell = (v) => { const s = Array.isArray(v) ? v.join('|') : v == null ? '' : String(v); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+// 開頭是 = + - @ 的文字，Excel 會當公式執行，前面加 ' 擋掉
+const csvCell = (v) => { let s = Array.isArray(v) ? v.join('|') : v == null ? '' : String(v); if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 const toCsv = (head, lines) => '﻿' + [head, ...lines].map((l) => l.map(csvCell).join(',')).join('\r\n');
 const stamp = () => new Date().toISOString().slice(0, 10);
 
 $('exCsv').addEventListener('click', () => {
   const head = ['ts', 'type', 'type_name', 'ho', 'pf', 'sg', ...QUIZ.map((x) => x.id), ...PROFILE.map((p) => p.id), 'weekend', 'newPlaces', 'barriers', 'motivators',
-    ...LIKERT.map((l) => l.id), 'decide', 'duration', 'open_wasted', 'open_trigger', 'open_other', 'pocket_count', 'pocket_consent', 'in_lottery', 'src', 'secs'];
+    ...LIKERT.map((l) => l.id), 'decide', 'duration', 'open_wasted', 'open_trigger', 'open_other', 'pocket_count', 'in_lottery', 'secs'];
   const lines = filtered().map((r) => [r.ts, r.type, TYPES[r.type]?.name, r.axes?.ho, r.axes?.pf, r.axes?.sg, ...QUIZ.map((x) => r.quiz?.[x.id]),
     ...PROFILE.map((p) => r.profile?.[p.id]), r.weekend, r.newPlaces, r.barriers, r.motivators, ...LIKERT.map((l) => r.likert?.[l.id]), r.decide, r.duration,
-    r.open?.wasted, r.open?.trigger, r.open?.other, r.pocket?.length || 0, r.pocketConsent ? 1 : 0, r.lottery ? 1 : 0, r.src, r.secs]);
-  download(`新竹問卷-回覆-${stamp()}.csv`, toCsv(head, lines), 'text/csv;charset=utf-8');
+    r.open?.wasted, r.open?.trigger, r.open?.other, r.pocket?.length || 0, r.lottery ? 1 : 0, r.secs]);
+  download(`新竹人測驗-回覆-${stamp()}.csv`, toCsv(head, lines), 'text/csv;charset=utf-8');
 });
 $('exPocket').addEventListener('click', () => {
-  const lines = filtered().flatMap((r) => (r.pocket || []).map((p) => [r.ts, p.name, p.cat, p.area, p.why, r.pocketConsent ? 1 : 0, r.type, r.profile?.role]));
-  download(`新竹問卷-口袋名單-${stamp()}.csv`, toCsv(['ts', 'name', 'cat', 'area', 'why', 'consent', 'type', 'role'], lines), 'text/csv;charset=utf-8');
+  const lines = filtered().flatMap((r) => (r.pocket || []).map((p) => [r.ts, p.name, r.type, r.profile?.role]));
+  download(`新竹人測驗-口袋名單-${stamp()}.csv`, toCsv(['ts', 'name', 'type', 'role'], lines), 'text/csv;charset=utf-8');
 });
 })();
