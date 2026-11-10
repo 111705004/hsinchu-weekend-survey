@@ -152,19 +152,17 @@ const PAGES = [
       giftBox(LOT.prize, `共抽 ${LOT.winners} 位・${prizeLine()}`, true),
       h('label', { class: 'f' }, 'Email', em),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', id: 'f-agree', checked: S.lotteryAgree, onchange(e) { S.lotteryAgree = e.target.checked; save(); clearErr(); } }),
-        h('span', {}, '參加抽獎，同意 Email 用於中獎通知。')),
-      h('label', { class: 'check' }, h('input', { type: 'checkbox', id: 'f-early', checked: S.early, onchange(e) { S.early = e.target.checked; save(); } }),
-        h('span', {}, '我也想搶先體驗：我們正在做一個讓新竹週末更好玩的新服務，上線前優先邀請你。')),
+        h('span', {}, '參加抽獎，並搶先體驗我們正在做的新竹週末新服務。我同意 Email 用於中獎通知和上線前的搶先體驗邀請。')),
       h('ul', { class: 'rules' },
         h('li', {}, '不留 Email 也能看結果，只是不能參加抽獎。'),
         h('li', {}, 'Email 和測驗答案分開存放，看不出哪份答案是誰的。'),
-        h('li', {}, '同一個 Email 只算一次；抽獎結束後，沒勾「搶先體驗」的 Email 會刪除。')),
+        h('li', {}, '同一個 Email 只算一次；想取消搶先體驗，回信說一聲就會刪除。')),
       h('div', { class: 'trap', 'aria-hidden': 'true' }, h('label', {}, '網站', h('input', { type: 'text', tabindex: '-1', autocomplete: 'off', oninput(e) { S.website = e.target.value; } })))];
   }, valid() {
     const e = S.email.trim();
     if (!e) return true;
     if (!EMAIL_RE.test(e)) return 'Email 格式好像不對，確認一下；不想抽獎可以清空。';
-    if (!S.lotteryAgree && !S.early) return '要參加抽獎，請勾選第一個方框；或清空 Email 直接看結果。';
+    if (!S.lotteryAgree) return '要參加抽獎，請勾選同意；或清空 Email 直接看結果。';
     return true;
   }, last: true },
 ];
@@ -231,7 +229,7 @@ async function submit() {
     profile: S.profile, weekend: S.weekend, newPlaces: S.newPlaces, barriers: S.barriers, motivators: S.motivators, likert: S.likert,
     decide: S.decide, duration: S.duration, open: S.open,
     pocket: S.pocket.slice(0, S.pocketN).map((n) => n.trim()).filter(Boolean).map((name) => ({ name })), pocketConsent: true,
-    lottery: email && (S.lotteryAgree || S.early) ? { email, draw: S.lotteryAgree, early: S.early } : null, website: S.website,
+    lottery: email && S.lotteryAgree ? { email, draw: true, early: true } : null, website: S.website,
     secs: Math.round((Date.now() - S.started) / 1000),
   };
   let res = null, offline = false;
