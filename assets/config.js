@@ -6,7 +6,7 @@ const CONFIG = {
   LOTTERY: {
     prize: '價值 NT$200 的神秘禮物',
     winners: 1,          // 抽出幾位
-    deadline: '',        // 例如 '2026/12/15'；留空就不顯示截止日
-    announce: '',        // 例如 '12/20 以 Email 通知中獎者'；留空就顯示「以 Email 通知中獎者」
+    deadline: '11/18',   // 抽獎截止日；留空就不顯示
+    announce: '以 Email 通知中獎者', // 公布方式
   },
 };
