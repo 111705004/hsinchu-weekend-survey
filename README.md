@@ -4,7 +4,8 @@
 途中有幾題真心話、一題推薦店家；最後留 Email 可以抽神秘禮物、登記搶先體驗。
 
 - 測驗：https://wingofhsinchu.github.io/
-- 後台：https://wingofhsinchu.github.io/admin.html（要管理密碼）
+- 後台：https://wingofhsinchu.github.io/admin.html
+（要管理密碼）
 
 網頁放在 GitHub Pages，答案存進 Google 試算表。
 
