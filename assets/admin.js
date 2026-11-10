@@ -144,7 +144,7 @@ function render() {
     h('h3', {}, '原因 × 新竹人類型'),
     crosstab(rows, (r) => TYPES[r.type]?.name, Object.values(TYPES).map((t) => t.name), (r) => r.barriers, BARRIERS)));
 
-  out.append(sec('什麼會讓人出門', '出門誘因的選項刻意混了很多種，看各選項的排名，也看「自認兩點一線」的人選得是否不同。',
+  out.append(sec('什麼會讓人出門', '看各選項的排名，也比較「自認兩點一線」的人和其他人選得有什麼不同。',
     h('div', { class: 'grid2' },
       col('出門誘因（最多選 3）', hbar(count(rows, (r) => r.motivators, MOTIVATORS), n)),
       col('願意花多少時間', hbar(count(rows, (r) => r.duration, DURATION), n, { sort: false }))),
