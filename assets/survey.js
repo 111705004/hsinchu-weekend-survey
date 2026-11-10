@@ -284,7 +284,11 @@ function result(d) {
       : giftBox('這次沒有參加抽獎', '沒有留 Email 或沒勾抽獎，所以不在抽獎名單裡。'),
     d.offline && h('p', { class: 'note' }, '網路好像不太穩，你的答案先存在這台裝置，下次打開這頁會自動補送。'),
     h('div', { class: 'acts' },
-      h('button', { type: 'button', class: 'btn red', onclick: () => saveImage(d, t, bars, no).catch(() => { msg.textContent = '這個瀏覽器存不了圖，直接截圖也可以。'; }) }, '存成圖片'),
+      h('button', { type: 'button', class: 'btn red', async onclick(e) {
+        const b = e.currentTarget; b.disabled = true; b.textContent = '產生圖片中…';
+        try { await saveImage(d, t, bars, no); } catch { msg.textContent = '這個瀏覽器做不出圖片，直接截圖也可以。'; }
+        b.disabled = false; b.textContent = '存成圖片';
+      } }, '存成圖片'),
       h('button', { type: 'button', class: 'btn ghost', onclick: () => share(msg) }, '叫朋友來測')),
     msg,
     h('button', { type: 'button', class: 'link', onclick() { ls.del(K_DONE); S = blank(); save(); show(); } }, '重新測一次')));
@@ -335,9 +339,21 @@ async function saveImage(d, t, bars, no) {
     x.fillStyle = '#1d2b25'; x.font = `500 34px ${sans}`; y = wrap(x, v, 290, y, W - 410, 48) + 70;
   });
   x.fillStyle = '#2e5b45'; x.font = `700 30px ${sans}`; x.fillText('你是哪種新竹人？來測測看', 120, H - 110);
-  const blob = await new Promise((r, j) => c.toBlob((b) => (b ? r(b) : j(new Error('blob'))), 'image/png'));
-  const a = h('a', { href: URL.createObjectURL(blob), download: `新竹人卡-${t.name}.png` });
-  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  showImage(c.toDataURL('image/png'), t.name);
+}
+// 在同一頁跳出圖片，讓手機長按儲存；不下載、不開新分頁（LINE、IG 內建瀏覽器擋下載）
+function showImage(src, name) {
+  document.querySelector('.shot')?.remove();
+  const touch = matchMedia('(pointer: coarse)').matches;
+  const close = () => { box.remove(); document.removeEventListener('keydown', esc); };
+  const esc = (e) => { if (e.key === 'Escape') close(); };
+  const box = h('div', { class: 'shot', role: 'dialog', 'aria-modal': 'true', 'aria-label': '你的新竹人卡圖片', onclick(e) { if (e.target === box) close(); } },
+    h('p', { class: 'shot-hint' }, touch ? '長按圖片 →「儲存影像」或「加入照片」' : '在圖片上按右鍵 →「另存圖片」'),
+    h('img', { src, alt: `新竹人卡：${name}` }),
+    h('button', { type: 'button', class: 'btn ghost shot-close', onclick: close }, '關閉'));
+  document.body.append(box);
+  document.addEventListener('keydown', esc);
+  box.querySelector('.shot-close').focus();
 }
 function round(x, l, t, w, hh, r) { x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + hh, r); x.arcTo(l + w, t + hh, l, t + hh, r); x.arcTo(l, t + hh, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath(); }
 // 中文逐字換行，回傳最後一行的 y
