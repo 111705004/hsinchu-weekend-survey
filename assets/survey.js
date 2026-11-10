@@ -3,6 +3,7 @@
 'use strict';
 const URL_ = (typeof CONFIG !== 'undefined' && CONFIG.SCRIPT_URL) || '';
 const LOT = (typeof CONFIG !== 'undefined' && CONFIG.LOTTERY) || { prize: '神秘禮物', winners: 1 };
+const CONTACT = (typeof CONFIG !== 'undefined' && CONFIG.CONTACT) || '';
 const K_DRAFT = 'hs-quiz-draft', K_DONE = 'hs-quiz-done', K_PENDING = 'hs-quiz-pending';
 const ls = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -156,7 +157,8 @@ const PAGES = [
       h('ul', { class: 'rules' },
         h('li', {}, '不留 Email 也能看結果，只是不能參加抽獎。'),
         h('li', {}, 'Email 和測驗答案分開存放，看不出哪份答案是誰的。'),
-        h('li', {}, '同一個 Email 只算一次；想取消搶先體驗，回信說一聲就會刪除。')),
+        h('li', {}, '同一個 Email 只算一次。'),
+        h('li', {}, '想取消搶先體驗，寫信到 ', h('b', { class: 'mail' }, CONTACT), ' 說一聲就會刪除。')),
       h('div', { class: 'trap', 'aria-hidden': 'true' }, h('label', {}, '網站', h('input', { type: 'text', tabindex: '-1', autocomplete: 'off', oninput(e) { S.website = e.target.value; } })))];
   }, valid() {
     const e = S.email.trim();

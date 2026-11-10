@@ -177,3 +177,4 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 @keyframes twinkle{50%{transform:scale(.4);opacity:.3}}
 @media (prefers-reduced-motion:reduce){.cast svg,.gift *{animation:none!important}.gift .qm{opacity:1}}
 .addmore{align-self:flex-start}
+.rules .mail{color:var(--ink);font-weight:500;user-select:all;overflow-wrap:anywhere}
